@@ -40,10 +40,10 @@ public class TemporalDataPatternApplicationTests {
 
         em.flush();
 
-        final Optional<SampleTemporalEntity> lookMeUp = repo.findTemporally(
+        final Optional<SampleTemporalEntity> lookMeUp = repo.findByKeyAt(
           "lookMeUp",
-          LocalDate.now().plusDays(-2),
-          SampleTemporalEntity.class);
+          LocalDate.now().plusDays(-2)
+        );
         assertFalse(lookMeUp.isPresent());
 
     }
@@ -63,14 +63,24 @@ public class TemporalDataPatternApplicationTests {
         assertEquals("hello", byId.get().getProperty());
         assertNotNull(byId.get().getId());
 
-        final Optional<SampleTemporalEntity> lookMeUp = repo.findTemporally(
+        final Optional<SampleTemporalEntity> lookMeUp = repo.findByKeyAt(
           "lookMeUp",
-          LocalDate.now().plusDays(2),
-          SampleTemporalEntity.class
+          LocalDate.now().plusDays(2)
         );
         assertTrue(lookMeUp.isPresent());
         assertEquals("hello", lookMeUp.get().getProperty());
         assertNotNull(lookMeUp.get().getId());
+
+        final Optional<SampleTemporalEntity> lookMeUpNow = repo.findByKey(
+          "lookMeUp"
+        );
+        assertTrue(lookMeUpNow.isPresent());
+        assertEquals("hello", lookMeUpNow.get().getProperty());
+        assertNotNull(lookMeUpNow.get().getId());
+
+        assertEquals(lookMeUpNow.get(), lookMeUp.get());
+        assertEquals(lookMeUpNow.get(), saved);
+        assertEquals(lookMeUpNow.get(), byId.get());
 
     }
 

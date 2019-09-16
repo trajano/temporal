@@ -11,9 +11,18 @@ public interface TemporalRepository<
   O extends TemporalEntity<S, T>
   > {
 
-    Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType);
+    @SuppressWarnings("unchecked")
+    default Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
+        try {
+            return findByConstraint(key, at, supersededBy, (Class<T>) resultType.getMethod("getEffectiveOn").getReturnType(), resultType);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
-    default Optional<O> findTemporally(
+    Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<T> temporalType, Class<O> resultType);
+
+    default Optional<O> findByKeyAt(
       final S key,
       final T at,
       final Class<O> resultType) {

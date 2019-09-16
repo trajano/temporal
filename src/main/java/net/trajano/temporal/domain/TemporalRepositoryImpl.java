@@ -20,7 +20,12 @@ class TemporalRepositoryImpl<
     @Autowired
     private EntityManager em;
 
-    public Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
+    public Optional<O> findByConstraint(
+      final S key,
+      final T at,
+      final UUID supersededBy,
+      final Class<T> temporalType,
+      final Class<O> resultType) {
         final CriteriaBuilder cb = em.getCriteriaBuilder();
         final CriteriaQuery<O> cq = cb.createQuery(resultType);
 
@@ -30,11 +35,11 @@ class TemporalRepositoryImpl<
         Predicate keyPredicate = cb.equal(entityRoot.get("key"), key);
         Predicate supersededByPredicate = cb.equal(entityRoot.get("supersededBy"), supersededBy);
 
-        final Subquery<Comparable> effectiveOnQuery = cq.subquery(Comparable.class);
+        final Subquery<T> effectiveOnQuery = cq.subquery(temporalType);
         final Root<O> effectiveOnRoot = effectiveOnQuery.from(resultType);
         Predicate keyPredicateQ = cb.equal(effectiveOnRoot.get("key"), key);
         Predicate supersededByPredicateQ = cb.equal(effectiveOnRoot.get("supersededBy"), supersededBy);
-        final Path<Comparable> effectiveOnQueryPath = effectiveOnRoot.get("effectiveOn");
+        final Path<T> effectiveOnQueryPath = effectiveOnRoot.get("effectiveOn");
 
         final Predicate atPredicate = cb.lessThanOrEqualTo(effectiveOnRoot.get("effectiveOn"), at);
 
