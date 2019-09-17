@@ -8,9 +8,12 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.*;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.time.temporal.Temporal;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 class TemporalRepositoryImpl<
   S extends Serializable,
@@ -24,17 +27,66 @@ class TemporalRepositoryImpl<
      */
     private static final UUID SUPERSEDED_TEMPORARILY = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+    /**
+     * UUID to represent not superseded.  This prevents having {@code NULL} values in index.
+     */
+    static final UUID NOT_SUPERSEDED = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     private static final String FIELD_EFFECTIVE_ON = "effectiveOn";
 
     private static final String FIELD_KEY = "key";
 
     private static final String FIELD_SUPERSEDED_BY = "supersededBy";
 
+    /**
+     * A simple cache of that maps the the temporal entity class to its temporal type.
+     */
+    private final Map<Class<O>, Class<T>> temporalTypeMap = new WeakHashMap<>();
+
+    /**
+     * A simple cache of that maps the the temporal type to its {@code now()} method if available.
+     */
+    private final Map<Class<? extends Temporal>, Method> nowMethod = new WeakHashMap<>();
+
     @Autowired
     private EntityManager em;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Optional<O> findByConstraint(
+    @SuppressWarnings("unchecked")
+    public Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
+
+        return findByConstraint(
+          key,
+          at,
+          supersededBy,
+          temporalTypeMap.computeIfAbsent(
+            resultType,
+            t -> {
+                try {
+                    return (Class<T>) t.getMethod("getEffectiveOn").getReturnType();
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+          ),
+          resultType
+        );
+    }
+
+    /**
+     * Finds the temporal entity for a given time.  This uses the computed temporal type.
+     *
+     * @param key key
+     * @param at at which time
+     * @param supersededBy specific superseded value
+     * @param temporalType temporal type
+     * @param resultType result type
+     * @return temporal entity
+     */
+    private Optional<O> findByConstraint(
       final S key,
       final T at,
       final UUID supersededBy,
@@ -85,6 +137,9 @@ class TemporalRepositoryImpl<
         if (object.getId() != null) {
             throw new PersistenceException(String.format("Temporal object ID must not be set, got: %s", object.getId()));
         }
+        if (!NOT_SUPERSEDED.equals(object.getSupersededBy())) {
+            throw new PersistenceException(String.format("Temporal object must not be superseded, got: %s", object.getSupersededBy()));
+        }
         if (em.contains(object)) {
             throw new PersistenceException(String.format("Temporal object must not be managed: %s", object));
         }
@@ -94,7 +149,7 @@ class TemporalRepositoryImpl<
         final Root<O> entityRoot = cq.from(resultType);
         Predicate keyPredicate = cb.equal(entityRoot.get(FIELD_KEY), object.getKey());
         Predicate effectiveOnPredicate = cb.equal(entityRoot.get(FIELD_EFFECTIVE_ON), object.getEffectiveOn());
-        Predicate supersededByPredicate = cb.equal(entityRoot.get(FIELD_SUPERSEDED_BY), TemporalEntity.NOT_SUPERSEDED);
+        Predicate supersededByPredicate = cb.equal(entityRoot.get(FIELD_SUPERSEDED_BY), NOT_SUPERSEDED);
 
         O existing = null;
         try {
@@ -107,7 +162,7 @@ class TemporalRepositoryImpl<
             ).getSingleResult();
             existing.setSupersededBy(SUPERSEDED_TEMPORARILY);
             em.merge(existing);
-        } catch (NoResultException e) {
+        } catch (final NoResultException e) {
             // no existing entry found.
         }
 

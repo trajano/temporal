@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.time.temporal.Temporal;
 import java.util.UUID;
 
+import static net.trajano.temporal.domain.TemporalRepositoryImpl.NOT_SUPERSEDED;
+
 /**
  * @param <S> type for the lookup key.
  * @param <T> a temporal type, usually {@link java.time.ZonedDateTime} or {@link java.time.LocalDate}.
@@ -26,11 +28,6 @@ import java.util.UUID;
   }
 )
 public abstract class TemporalEntity<S extends Serializable, T extends Temporal & Comparable<? super T>> {
-
-    /**
-     * UUID to represent not superseded.  This prevents having {@code NULL} values in index.
-     */
-    public static final UUID NOT_SUPERSEDED = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     /**
      * Effective on.

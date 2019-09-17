@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -40,81 +41,45 @@ public class WebTest {
     }
 
     @Test
-    public void saveAndLoad() {
-        SampleTemporalEntity sample = new SampleTemporalEntity();
-        sample.setKey("myLookupKey");
-        sample.setProperty("test");
-
-        final SampleTemporalEntity saved = restTemplate.postForObject(
-          String.format("http://localhost:%d/sample/myLookupKey", port),
-          sample,
+    public void notFound() {
+        final ResponseEntity<SampleTemporalEntity> result = restTemplate.getForEntity(
+          String.format("http://localhost:%d/sample/not-found", port),
           SampleTemporalEntity.class);
-        assertThat(saved.getProperty(), is("test"));
-        assertThat(saved.getKey(), is("myLookupKey"));
 
-        final SampleTemporalEntity found = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey", port),
-          SampleTemporalEntity.class);
-        assertThat(found.getProperty(), is("test"));
-        assertThat(found.getKey(), is("myLookupKey"));
-
-        final SampleTemporalEntity foundWithDate = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey?at=%s", port, LocalDate.now().toString()),
-          SampleTemporalEntity.class);
-        assertThat(foundWithDate.getProperty(), is("test"));
-        assertThat(foundWithDate.getKey(), is("myLookupKey"));
-
-        final SampleTemporalEntity foundWithDateForTomorrow = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey?at=%s", port, LocalDate.now().plusDays(1).toString()),
-          SampleTemporalEntity.class);
-        assertThat(foundWithDateForTomorrow.getProperty(), is("test"));
-        assertThat(foundWithDateForTomorrow.getKey(), is("myLookupKey"));
-        assertThat(foundWithDateForTomorrow.getEffectiveOn(), is(LocalDate.now()));
-        assertNotNull(foundWithDateForTomorrow.getId());
-        assertThat(foundWithDateForTomorrow.getId(), is(foundWithDate.getId()));
-        assertThat(foundWithDateForTomorrow.getId(), is(found.getId()));
-        assertThat(foundWithDateForTomorrow, is(found));
-        assertThat(foundWithDateForTomorrow, is(foundWithDate));
+        assertThat(result.getStatusCodeValue(), is(404));
     }
 
     @Test
-    public void saveAndUpdate() {
+    public void saveAndLoad() {
         SampleTemporalEntity sample = new SampleTemporalEntity();
-        sample.setKey("myLookupKey");
+        sample.setKey("saveAndLoad");
         sample.setProperty("test");
 
         final SampleTemporalEntity saved = restTemplate.postForObject(
-          String.format("http://localhost:%d/sample/myLookupKey", port),
+          String.format("http://localhost:%d/sample/saveAndLoad", port),
           sample,
           SampleTemporalEntity.class);
+        System.out.println(saved);
         assertThat(saved.getProperty(), is("test"));
-        assertThat(saved.getKey(), is("myLookupKey"));
-
-        saved.setProperty("MyNewProperty");
-        final SampleTemporalEntity updated = restTemplate.postForObject(
-          String.format("http://localhost:%d/sample/myLookupKey", port),
-          saved,
-          SampleTemporalEntity.class);
-        assertThat(updated.getProperty(), is("MyNewProperty"));
-        assertThat(updated.getKey(), is("myLookupKey"));
+        assertThat(saved.getKey(), is("saveAndLoad"));
 
         final SampleTemporalEntity found = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey", port),
+          String.format("http://localhost:%d/sample/saveAndLoad", port),
           SampleTemporalEntity.class);
-        assertThat(found.getProperty(), is("MyNewProperty"));
-        assertThat(found.getKey(), is("myLookupKey"));
+        assertThat(found.getProperty(), is("test"));
+        assertThat(found.getKey(), is("saveAndLoad"));
 
         final SampleTemporalEntity foundWithDate = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey?at=%s", port, LocalDate.now().toString()),
+          String.format("http://localhost:%d/sample/saveAndLoad?at=%s", port, LocalDate.now().toString()),
           SampleTemporalEntity.class);
-        assertThat(foundWithDate.getProperty(), is("MyNewProperty"));
-        assertThat(foundWithDate.getKey(), is("myLookupKey"));
+        assertThat(foundWithDate.getProperty(), is("test"));
+        assertThat(foundWithDate.getKey(), is("saveAndLoad"));
 
         final SampleTemporalEntity foundWithDateForTomorrow = restTemplate.getForObject(
-          String.format("http://localhost:%d/sample/myLookupKey?at=%s", port, LocalDate.now().plusDays(1).toString()),
+          String.format("http://localhost:%d/sample/saveAndLoad?at=%s", port, LocalDate.now().plusDays(1).toString()),
           SampleTemporalEntity.class);
-        assertThat(foundWithDateForTomorrow.getProperty(), is("MyNewProperty"));
-        assertThat(foundWithDateForTomorrow.getKey(), is("myLookupKey"));
+        assertThat(foundWithDateForTomorrow.getProperty(), is("test"));
+        assertThat(foundWithDateForTomorrow.getKey(), is("saveAndLoad"));
         assertThat(foundWithDateForTomorrow.getEffectiveOn(), is(LocalDate.now()));
         assertNotNull(foundWithDateForTomorrow.getId());
         assertThat(foundWithDateForTomorrow.getId(), is(foundWithDate.getId()));

@@ -11,23 +11,23 @@ public interface TemporalRepository<
   O extends TemporalEntity<S, T>
   > {
 
-    @SuppressWarnings("unchecked")
-    default Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
-        try {
-            return findByConstraint(key, at, supersededBy, (Class<T>) resultType.getMethod("getEffectiveOn").getReturnType(), resultType);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<T> temporalType, Class<O> resultType);
+    /**
+     * Finds the temporal entity for a given time.
+     *
+     * @param key key
+     * @param at at which time
+     * @param supersededBy specific superseded value
+     * @param resultType result type
+     * @return temporal entity
+     */
+    Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType);
 
     default Optional<O> findByKeyAt(
       final S key,
       final T at,
       final Class<O> resultType) {
 
-        return findByConstraint(key, at, TemporalEntity.NOT_SUPERSEDED, resultType);
+        return findByConstraint(key, at, TemporalRepositoryImpl.NOT_SUPERSEDED, resultType);
     }
 
     O saveChecked(O object, Class<O> resultType);

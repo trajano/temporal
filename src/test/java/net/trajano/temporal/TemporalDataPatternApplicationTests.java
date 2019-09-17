@@ -38,7 +38,7 @@ public class TemporalDataPatternApplicationTests {
         object.setKey("lookMeUp");
         object.setEffectiveOn(LocalDate.now());
         object.setProperty("hello");
-        SampleTemporalEntity saved = repo.save(object);
+        SampleTemporalEntity saved = repo.saveTemporal(object);
 
         em.flush();
 
@@ -56,7 +56,7 @@ public class TemporalDataPatternApplicationTests {
         object.setKey("lookMeUp");
         object.setEffectiveOn(LocalDate.now());
         object.setProperty("hello");
-        SampleTemporalEntity saved = repo.save(object);
+        SampleTemporalEntity saved = repo.saveTemporal(object);
 
         em.flush();
 
@@ -83,6 +83,33 @@ public class TemporalDataPatternApplicationTests {
         assertEquals(lookMeUpNow.get(), lookMeUp.get());
         assertEquals(lookMeUpNow.get(), saved);
         assertEquals(lookMeUpNow.get(), byId.get());
+
+    }
+
+    @Test
+    public void insertWithKeys() {
+        SampleTemporalEntity object = new SampleTemporalEntity();
+        object.setKey("lookMeUp");
+        object.setEffectiveOn(LocalDate.now());
+        object.setProperty("hello");
+        SampleTemporalEntity saved = repo.saveTemporal(object, "notWhatWasSet", LocalDate.now().minusDays(4));
+
+        em.flush();
+
+        final Optional<SampleTemporalEntity> lookMeUpNow = repo.findByKey(
+          "lookMeUp"
+        );
+        assertFalse(lookMeUpNow.isPresent());
+
+        final Optional<SampleTemporalEntity> theOneThatWasSet = repo.findByKey(
+          "notWhatWasSet"
+        );
+
+        assertTrue(theOneThatWasSet.isPresent());
+        assertEquals("hello", theOneThatWasSet.get().getProperty());
+        assertNotNull(theOneThatWasSet.get().getId());
+
+        assertEquals(theOneThatWasSet.get(), saved);
 
     }
 
