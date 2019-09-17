@@ -49,7 +49,9 @@ public class SampleTemporalEntity extends TemporalEntity<String, LocalDate> {
 
     private String property;
 
-    @ElementCollection
+    @ElementCollection(
+      fetch = FetchType.EAGER
+    )
     private Map<String, String> additionalAttributes = new ConcurrentHashMap<>();
 
     @JsonAnyGetter

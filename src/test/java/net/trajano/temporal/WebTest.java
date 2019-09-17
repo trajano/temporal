@@ -87,4 +87,33 @@ public class WebTest {
         assertThat(foundWithDateForTomorrow, is(foundWithDate));
     }
 
+    @Test
+    public void saveAndUpdate() {
+        SampleTemporalEntity sample = new SampleTemporalEntity();
+        sample.setKey("saveAndUpdate");
+        sample.setProperty("test");
+
+        final SampleTemporalEntity saved = restTemplate.postForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdate", port),
+          sample,
+          SampleTemporalEntity.class);
+        assertThat(saved.getProperty(), is("test"));
+        assertThat(saved.getKey(), is("saveAndUpdate"));
+
+        saved.setProperty("newValue");
+        final SampleTemporalEntity updated = restTemplate.postForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdate", port),
+          saved,
+          SampleTemporalEntity.class);
+        assertThat(updated.getProperty(), is("newValue"));
+        assertThat(updated.getKey(), is("saveAndUpdate"));
+
+        final SampleTemporalEntity found = restTemplate.getForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdate", port),
+          SampleTemporalEntity.class);
+        assertThat(found.getProperty(), is("newValue"));
+        assertThat(found.getKey(), is("saveAndUpdate"));
+
+    }
+
 }

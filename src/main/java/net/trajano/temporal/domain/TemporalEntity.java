@@ -70,8 +70,7 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
     /**
      * Ensure that the generated ID is used.
      */
-    @PrePersist
-    private void nullifyId() {
+    void nullifyId() {
         id = null;
     }
 

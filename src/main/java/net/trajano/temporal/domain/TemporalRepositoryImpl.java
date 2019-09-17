@@ -1,5 +1,6 @@
 package net.trajano.temporal.domain;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
+@Slf4j
 class TemporalRepositoryImpl<
   S extends Serializable,
   T extends Temporal & Comparable<? super T>,
@@ -73,6 +75,7 @@ class TemporalRepositoryImpl<
     }
 
     @Override
+    @Transactional
     public Optional<O> findByKeyAt(
       final @NotNull S key,
       final @NotNull T at,
@@ -158,6 +161,10 @@ class TemporalRepositoryImpl<
 
     private O saveChecked(O object, Class<O> resultType) {
         validateObject(object);
+        if (object.getId() != null) {
+            log.warn(String.format("Temporal object ID should not be set, got: %s, resetting to null", object.getId()));
+            object.nullifyId();
+        }
         final CriteriaBuilder cb = em.getCriteriaBuilder();
         final CriteriaQuery<O> cq = cb.createQuery(resultType);
 
@@ -177,8 +184,10 @@ class TemporalRepositoryImpl<
             ).getSingleResult();
             existing.setSupersededBy(SUPERSEDED_TEMPORARILY);
             em.merge(existing);
+            em.flush();
         } catch (final NoResultException e) {
             // no existing entry found.
+            log.trace("No existing temporal object found");
         }
 
         em.persist(object);
@@ -206,9 +215,6 @@ class TemporalRepositoryImpl<
      * @param object object to validate.
      */
     private void validateObject(O object) {
-        if (object.getId() != null) {
-            throw new PersistenceException(String.format("Temporal object ID must not be set, got: %s", object.getId()));
-        }
         if (!NOT_SUPERSEDED.equals(object.getSupersededBy())) {
             throw new PersistenceException(String.format("Temporal object must not be superseded, got: %s", object.getSupersededBy()));
         }
