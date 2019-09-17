@@ -1,8 +1,11 @@
 package net.trajano.temporal.domain;
 
+import org.springframework.data.repository.Repository;
+
 import java.io.Serializable;
 import java.time.temporal.Temporal;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @param <S> type for the key
@@ -13,7 +16,7 @@ public interface TemporalRepository<
   S extends Serializable,
   T extends Temporal & Comparable<? super T>,
   O extends TemporalEntity<S, T>
-  > {
+  > extends Repository<O, UUID> {
 
     /**
      * Finds the temporal entity for a given time.

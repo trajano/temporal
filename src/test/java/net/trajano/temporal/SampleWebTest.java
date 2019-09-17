@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
   classes = TemporalDataPatternApplication.class
 )
-public class WebTest {
+public class SampleWebTest {
 
     @LocalServerPort
     private int port;
