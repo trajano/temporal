@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/sample")
@@ -23,10 +24,16 @@ public class SampleTemporalEntityController {
         required = false
       ) LocalDate at
     ) {
+        final Optional<SampleTemporalEntity> optional;
         if (at == null) {
-            return Mono.justOrEmpty(repository.findByKey(key));
+            optional = repository.findByKey(key);
         } else {
-            return Mono.justOrEmpty(repository.findByKeyAt(key, at));
+            optional = repository.findByKeyAt(key, at);
+        }
+        if (optional.isPresent()) {
+            return Mono.just(optional.get());
+        } else {
+            throw new NotFoundException();
         }
     }
 
