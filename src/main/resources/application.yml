@@ -1,6 +1,9 @@
 spring:
   main:
     banner-mode: "off"
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 logging:
   level:
     root: WARN

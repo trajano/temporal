@@ -59,7 +59,6 @@ public class WebTest {
           String.format("http://localhost:%d/sample/saveAndLoad", port),
           sample,
           SampleTemporalEntity.class);
-        System.out.println(saved);
         assertThat(saved.getProperty(), is("test"));
         assertThat(saved.getKey(), is("saveAndLoad"));
 

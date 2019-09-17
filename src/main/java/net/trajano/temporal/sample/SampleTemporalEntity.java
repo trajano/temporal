@@ -1,11 +1,15 @@
 package net.trajano.temporal.sample;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.trajano.temporal.domain.TemporalEntity;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This is a sample temporal entity with a single property and an element collection. {@link Table#uniqueConstraints()}
@@ -44,5 +48,18 @@ public class SampleTemporalEntity extends TemporalEntity<String, LocalDate> {
     private String key;
 
     private String property;
+
+    @ElementCollection
+    private Map<String, String> additionalAttributes = new ConcurrentHashMap<>();
+
+    @JsonAnyGetter
+    public Map<String, String> getAdditionalAttributes() {
+        return additionalAttributes;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalAttribute(final String name, String value) {
+        additionalAttributes.put(name, value);
+    }
 
 }
