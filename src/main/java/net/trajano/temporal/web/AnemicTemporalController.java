@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 @RestController
@@ -22,7 +22,7 @@ public class AnemicTemporalController {
       @RequestParam(
         name = "at",
         required = false
-      ) ZonedDateTime at
+      ) Instant at
     ) {
         final Optional<AnemicTemporal> optional;
         if (at == null) {
@@ -43,7 +43,7 @@ public class AnemicTemporalController {
       @RequestBody final AnemicTemporal object) {
         object.setKey(key);
         if (object.getEffectiveOn() == null) {
-            object.setEffectiveOn(ZonedDateTime.now());
+            object.setEffectiveOn(Instant.now());
         }
         AnemicTemporal saved = repository.saveTemporal(object);
         return Mono.justOrEmpty(saved);

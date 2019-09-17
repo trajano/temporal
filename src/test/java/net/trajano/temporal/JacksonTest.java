@@ -8,8 +8,8 @@ import net.trajano.temporal.anemic.AnemicTemporal;
 import net.trajano.temporal.sample.SampleTemporalEntity;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 
 import static org.junit.Assert.assertEquals;
 
@@ -45,7 +45,7 @@ public class JacksonTest {
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         AnemicTemporal test = new AnemicTemporal();
-        final ZonedDateTime now = ZonedDateTime.now();
+        final Instant now = Instant.now();
         test.setEffectiveOn(now);
         test.setAdditionalAttribute("hello", "world");
 
@@ -55,7 +55,8 @@ public class JacksonTest {
           .readerFor(AnemicTemporal.class)
           .readValue(json);
         assertEquals("world", read.getAdditionalAttributes().get("hello"));
-        assertEquals(now.toInstant(), read.getEffectiveOn().toInstant());
+        assertEquals(now, read.getEffectiveOn());
+        assertEquals(read, test);
 
     }
 

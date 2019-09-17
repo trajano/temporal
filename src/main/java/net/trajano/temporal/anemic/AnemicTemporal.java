@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import net.trajano.temporal.domain.TemporalEntity;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
     )
   }
 )
-public class AnemicTemporal extends TemporalEntity<String, ZonedDateTime> {
+public class AnemicTemporal extends TemporalEntity<String, Instant> {
 
     @ElementCollection(
       fetch = FetchType.EAGER
