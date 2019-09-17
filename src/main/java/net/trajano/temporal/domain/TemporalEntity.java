@@ -71,4 +71,6 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
     )
     public abstract S getKey();
 
+    public abstract void setKey(S key);
+
 }

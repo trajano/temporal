@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface SampleTemporalObjectRepo
+public interface SampleTemporalEntityRepository
   extends
   CrudRepository<SampleTemporalEntity, UUID>,
   TemporalRepository<String, LocalDate, SampleTemporalEntity> {

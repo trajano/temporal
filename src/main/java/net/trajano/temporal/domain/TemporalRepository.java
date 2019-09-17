@@ -30,4 +30,46 @@ public interface TemporalRepository<
         return findByConstraint(key, at, TemporalEntity.NOT_SUPERSEDED, resultType);
     }
 
+    O saveChecked(O object, Class<O> resultType);
+
+    /**
+     * Saves the temporal with the key data overridden in the object.  Note this modifies the data in object.  It is
+     * expected that the object is not managed.
+     *
+     * @param object temporal object to save.
+     * @param effectiveOn effective on
+     * @return saved object
+     */
+    default O saveTemporal(final O object, T effectiveOn) {
+        object.setEffectiveOn(effectiveOn);
+        return saveTemporal(object);
+    }
+
+    /**
+     * Saves the temporal with the key data overridden in the object.  Note this modifies the data in object.  It is
+     * expected that the object is not managed.
+     *
+     * @param object temporal object to save.
+     * @param key lookup key
+     * @param effectiveOn effective on
+     * @return saved object
+     */
+    default O saveTemporal(final O object, S key, T effectiveOn) {
+        object.setKey(key);
+        return saveTemporal(object, effectiveOn);
+    }
+
+    /**
+     * Saves the temporal object.  Note this modifies the data in object.  It is
+     * expected that the object is not managed.
+     *
+     * @param object temporal object to save.
+     * @return saved object
+     */
+    @SuppressWarnings("unchecked")
+    default O saveTemporal(final O object) {
+        object.setId(null);
+        return saveChecked(object, (Class<O>) object.getClass());
+    }
+
 }

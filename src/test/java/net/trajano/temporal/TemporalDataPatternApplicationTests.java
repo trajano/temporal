@@ -1,7 +1,7 @@
 package net.trajano.temporal;
 
 import net.trajano.temporal.sample.SampleTemporalEntity;
-import net.trajano.temporal.sample.SampleTemporalObjectRepo;
+import net.trajano.temporal.sample.SampleTemporalEntityRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +17,16 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({"test"})
-@DataJpaTest
+@DataJpaTest(
+  showSql = false
+)
 public class TemporalDataPatternApplicationTests {
 
     @Autowired
     private EntityManager em;
 
     @Autowired
-    private SampleTemporalObjectRepo repo;
+    private SampleTemporalEntityRepository repo;
 
     @Test
     public void contextLoads() {
