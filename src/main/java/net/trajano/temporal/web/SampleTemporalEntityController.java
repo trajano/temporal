@@ -41,12 +41,11 @@ public class SampleTemporalEntityController {
     public Mono<SampleTemporalEntity> save(
       @PathVariable final String key,
       @RequestBody final SampleTemporalEntity object) {
-        object.setId(null);
         object.setKey(key);
         if (object.getEffectiveOn() == null) {
             object.setEffectiveOn(LocalDate.now());
         }
-        SampleTemporalEntity saved = repository.saveChecked(object, SampleTemporalEntity.class);
+        SampleTemporalEntity saved = repository.saveTemporal(object);
         return Mono.justOrEmpty(saved);
     }
 

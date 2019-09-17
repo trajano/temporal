@@ -3,8 +3,12 @@ package net.trajano.temporal.domain;
 import java.io.Serializable;
 import java.time.temporal.Temporal;
 import java.util.Optional;
-import java.util.UUID;
 
+/**
+ * @param <S> type for the key
+ * @param <T> type for the effectiveOn
+ * @param <O> temporal entity type
+ */
 public interface TemporalRepository<
   S extends Serializable,
   T extends Temporal & Comparable<? super T>,
@@ -16,21 +20,14 @@ public interface TemporalRepository<
      *
      * @param key key
      * @param at at which time
-     * @param supersededBy specific superseded value
-     * @param resultType result type
+     * @param resultType result type.  This is needed as
+     * {@link javax.persistence.MappedSuperclass} cannot be used for JPA queries.
      * @return temporal entity
      */
-    Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType);
-
-    default Optional<O> findByKeyAt(
+    Optional<O> findByKeyAt(
       final S key,
       final T at,
-      final Class<O> resultType) {
-
-        return findByConstraint(key, at, TemporalRepositoryImpl.NOT_SUPERSEDED, resultType);
-    }
-
-    O saveChecked(O object, Class<O> resultType);
+      final Class<O> resultType);
 
     /**
      * Saves the temporal with the key data overridden in the object.  Note this modifies the data in object.  It is
@@ -60,16 +57,12 @@ public interface TemporalRepository<
     }
 
     /**
-     * Saves the temporal object.  Note this modifies the data in object.  It is
+     * Saves the temporal object. It is
      * expected that the object is not managed.
      *
      * @param object temporal object to save.
      * @return saved object
      */
-    @SuppressWarnings("unchecked")
-    default O saveTemporal(final O object) {
-        object.setId(null);
-        return saveChecked(object, (Class<O>) object.getClass());
-    }
+    O saveTemporal(final O object);
 
 }

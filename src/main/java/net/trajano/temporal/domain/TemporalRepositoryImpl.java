@@ -52,11 +52,18 @@ class TemporalRepositoryImpl<
     private EntityManager em;
 
     /**
-     * {@inheritDoc}
+     * Finds the temporal entity for a given time.
+     * This implements a caching mechanism to reduce the time needed to get the temporal type.
+     *
+     * @param key key
+     * @param at at which time
+     * @param supersededBy specific superseded value
+     * @param resultType result type.  This is needed as
+     * {@link javax.persistence.MappedSuperclass} cannot be used for JPA queries.
+     * @return temporal entity
      */
-    @Override
     @SuppressWarnings("unchecked")
-    public Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
+    private Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
 
         return findByConstraint(
           key,
@@ -74,6 +81,15 @@ class TemporalRepositoryImpl<
           ),
           resultType
         );
+    }
+
+    @Override
+    public Optional<O> findByKeyAt(
+      final S key,
+      final T at,
+      final Class<O> resultType) {
+
+        return findByConstraint(key, at, TemporalRepositoryImpl.NOT_SUPERSEDED, resultType);
     }
 
     /**
@@ -131,9 +147,7 @@ class TemporalRepositoryImpl<
         }
     }
 
-    @Override
-    @Transactional
-    public O saveChecked(O object, Class<O> resultType) {
+    private O saveChecked(O object, Class<O> resultType) {
         if (object.getId() != null) {
             throw new PersistenceException(String.format("Temporal object ID must not be set, got: %s", object.getId()));
         }
@@ -173,6 +187,16 @@ class TemporalRepositoryImpl<
         }
 
         return object;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public O saveTemporal(final O object) {
+        return saveChecked(object, (Class<O>) object.getClass());
     }
 
 }

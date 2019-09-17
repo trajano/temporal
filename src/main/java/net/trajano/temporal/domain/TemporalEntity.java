@@ -1,6 +1,8 @@
 package net.trajano.temporal.domain;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -46,6 +48,7 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
     @Column(
       length = 16
     )
+    @Setter(AccessLevel.NONE)
     private UUID id;
 
     /**
@@ -69,5 +72,13 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
     public abstract S getKey();
 
     public abstract void setKey(S key);
+
+    /**
+     * Ensure that the generated ID is used.
+     */
+    @PrePersist
+    private void nullifyId() {
+        id = null;
+    }
 
 }
