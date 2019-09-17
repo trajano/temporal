@@ -116,4 +116,39 @@ public class WebTest {
 
     }
 
+    @Test
+    public void saveAndUpdateAdditionalProperties() {
+        SampleTemporalEntity sample = new SampleTemporalEntity();
+        sample.setKey("saveAndUpdateAdditionalProperties");
+        sample.setProperty("test");
+        sample.setAdditionalAttribute("abc", "123");
+
+        final SampleTemporalEntity saved = restTemplate.postForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdateAdditionalProperties", port),
+          sample,
+          SampleTemporalEntity.class);
+        assertThat(saved.getProperty(), is("test"));
+        assertThat(saved.getKey(), is("saveAndUpdateAdditionalProperties"));
+        assertThat(saved.getAdditionalAttribute("abc"), is("123"));
+
+        saved.setProperty("newValue");
+        saved.setAdditionalAttribute("abc", "456");
+        saved.setAdditionalAttribute("do", "re-mi");
+        final SampleTemporalEntity updated = restTemplate.postForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdateAdditionalProperties", port),
+          saved,
+          SampleTemporalEntity.class);
+        assertThat(updated.getProperty(), is("newValue"));
+        assertThat(updated.getKey(), is("saveAndUpdateAdditionalProperties"));
+
+        final SampleTemporalEntity found = restTemplate.getForObject(
+          String.format("http://localhost:%d/sample/saveAndUpdateAdditionalProperties", port),
+          SampleTemporalEntity.class);
+        assertThat(found.getProperty(), is("newValue"));
+        assertThat(found.getKey(), is("saveAndUpdateAdditionalProperties"));
+        assertThat(found.getAdditionalAttribute("abc"), is("456"));
+        assertThat(found.getAdditionalAttribute("do"), is("re-mi"));
+
+    }
+
 }

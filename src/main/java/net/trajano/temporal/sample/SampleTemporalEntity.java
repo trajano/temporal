@@ -54,6 +54,10 @@ public class SampleTemporalEntity extends TemporalEntity<String, LocalDate> {
     )
     private Map<String, String> additionalAttributes = new ConcurrentHashMap<>();
 
+    public String getAdditionalAttribute(String key) {
+        return additionalAttributes.get(key);
+    }
+
     @JsonAnyGetter
     public Map<String, String> getAdditionalAttributes() {
         return additionalAttributes;
