@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.temporal.Temporal;
 import java.util.UUID;
@@ -18,17 +19,6 @@ import static net.trajano.temporal.domain.TemporalRepositoryImpl.NOT_SUPERSEDED;
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Data
-@Table(
-  uniqueConstraints = {
-    @UniqueConstraint(
-      columnNames = {
-        "key",
-        "effectiveOn",
-        "supersededBy"
-      }
-    )
-  }
-)
 public abstract class TemporalEntity<S extends Serializable, T extends Temporal & Comparable<? super T>> {
 
     /**
@@ -38,6 +28,7 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
       nullable = false,
       updatable = false
     )
+    @NotNull
     private T effectiveOn;
 
     /**
@@ -55,8 +46,10 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
      * UUID of the temporal object that supersedes this object.
      */
     @Column(
+      length = 16,
       nullable = false
     )
+    @NotNull
     private UUID supersededBy = NOT_SUPERSEDED;
 
     /**
@@ -69,6 +62,7 @@ public abstract class TemporalEntity<S extends Serializable, T extends Temporal 
       nullable = false,
       updatable = false
     )
+    @NotNull
     public abstract S getKey();
 
     public abstract void setKey(S key);

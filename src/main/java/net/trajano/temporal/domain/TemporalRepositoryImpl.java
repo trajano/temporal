@@ -7,8 +7,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.*;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.Optional;
@@ -39,57 +40,65 @@ class TemporalRepositoryImpl<
     private static final String FIELD_SUPERSEDED_BY = "supersededBy";
 
     /**
-     * A simple cache of that maps the the temporal entity class to its temporal type.
+     * A cache of that maps the the temporal entity class to its temporal type.
      */
     private final Map<Class<O>, Class<T>> temporalTypeMap = new WeakHashMap<>();
-
-    /**
-     * A simple cache of that maps the the temporal type to its {@code now()} method if available.
-     */
-    private final Map<Class<? extends Temporal>, Method> nowMethod = new WeakHashMap<>();
 
     @Autowired
     private EntityManager em;
 
     /**
-     * Finds the temporal entity for a given time.
+     * Finds the temporal entity for a given time that is not superseded.
      * This implements a caching mechanism to reduce the time needed to get the temporal type.
      *
      * @param key key
      * @param at at which time
-     * @param supersededBy specific superseded value
      * @param resultType result type.  This is needed as
      * {@link javax.persistence.MappedSuperclass} cannot be used for JPA queries.
      * @return temporal entity
      */
-    @SuppressWarnings("unchecked")
-    private Optional<O> findByConstraint(S key, T at, UUID supersededBy, Class<O> resultType) {
+    private Optional<O> findByConstraint(
+      final S key,
+      final T at,
+      final Class<O> resultType
+    ) {
 
         return findByConstraint(
           key,
           at,
-          supersededBy,
-          temporalTypeMap.computeIfAbsent(
-            resultType,
-            t -> {
-                try {
-                    return (Class<T>) t.getMethod("getEffectiveOn").getReturnType();
-                } catch (ReflectiveOperationException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-          ),
+          TemporalRepositoryImpl.NOT_SUPERSEDED,
+          getTemporalType(resultType),
           resultType
         );
     }
 
     @Override
     public Optional<O> findByKeyAt(
-      final S key,
-      final T at,
-      final Class<O> resultType) {
+      final @NotNull S key,
+      final @NotNull T at,
+      final @NotNull Class<O> resultType) {
 
-        return findByConstraint(key, at, TemporalRepositoryImpl.NOT_SUPERSEDED, resultType);
+        return findByConstraint(key, at, resultType);
+    }
+
+    /**
+     * Gets the temporal type from the result type.  Uses the cached value if available.
+     *
+     * @param resultType result type
+     * @return temporal type.
+     */
+    @SuppressWarnings("unchecked")
+    private Class<T> getTemporalType(Class<O> resultType) {
+        return temporalTypeMap.computeIfAbsent(
+          resultType,
+          t -> {
+              try {
+                  return (Class<T>) resultType.getMethod("getEffectiveOn").getReturnType();
+              } catch (ReflectiveOperationException e) {
+                  throw new IllegalStateException(e);
+              }
+          }
+        );
     }
 
     /**
@@ -148,15 +157,7 @@ class TemporalRepositoryImpl<
     }
 
     private O saveChecked(O object, Class<O> resultType) {
-        if (object.getId() != null) {
-            throw new PersistenceException(String.format("Temporal object ID must not be set, got: %s", object.getId()));
-        }
-        if (!NOT_SUPERSEDED.equals(object.getSupersededBy())) {
-            throw new PersistenceException(String.format("Temporal object must not be superseded, got: %s", object.getSupersededBy()));
-        }
-        if (em.contains(object)) {
-            throw new PersistenceException(String.format("Temporal object must not be managed: %s", object));
-        }
+        validateObject(object);
         final CriteriaBuilder cb = em.getCriteriaBuilder();
         final CriteriaQuery<O> cq = cb.createQuery(resultType);
 
@@ -195,8 +196,25 @@ class TemporalRepositoryImpl<
     @Override
     @SuppressWarnings("unchecked")
     @Transactional
-    public O saveTemporal(final O object) {
+    public O saveTemporal(@Valid final O object) {
         return saveChecked(object, (Class<O>) object.getClass());
+    }
+
+    /**
+     * Validates if the object is valid for saving.
+     *
+     * @param object object to validate.
+     */
+    private void validateObject(O object) {
+        if (object.getId() != null) {
+            throw new PersistenceException(String.format("Temporal object ID must not be set, got: %s", object.getId()));
+        }
+        if (!NOT_SUPERSEDED.equals(object.getSupersededBy())) {
+            throw new PersistenceException(String.format("Temporal object must not be superseded, got: %s", object.getSupersededBy()));
+        }
+        if (em.contains(object)) {
+            throw new PersistenceException(String.format("Temporal object must not be managed: %s", object));
+        }
     }
 
 }

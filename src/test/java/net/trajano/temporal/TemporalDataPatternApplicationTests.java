@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityManager;
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -48,6 +49,14 @@ public class TemporalDataPatternApplicationTests {
         );
         assertFalse(lookMeUp.isPresent());
 
+    }
+
+    @Test(expected = ConstraintViolationException.class)
+    public void failedValidation() {
+        SampleTemporalEntity object = new SampleTemporalEntity();
+        object.setProperty("hello");
+        repo.saveTemporal(object);
+        em.flush();
     }
 
     @Test

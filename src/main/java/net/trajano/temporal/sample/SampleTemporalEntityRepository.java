@@ -15,7 +15,7 @@ public interface SampleTemporalEntityRepository
   TemporalRepository<String, LocalDate, SampleTemporalEntity> {
 
     default Optional<SampleTemporalEntity> findByKey(String key) {
-        return findByKeyAt(key, LocalDate.now());
+        return findByKeyAt(key, LocalDate.now(), SampleTemporalEntity.class);
     }
 
     default Optional<SampleTemporalEntity> findByKeyAt(String key, LocalDate at) {
